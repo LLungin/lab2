@@ -5,8 +5,8 @@ using std::istream;
 using std::endl;
 
 
-
-template<typename T>
+// Конструкторы указанные в задании и те, что я считаю нужными и удобными
+template<typename T> // матрица вида: "rows" строк и 1 столбец
 Matrix<T>::Matrix(int rows) : rows_(rows), cols_(1)
 {
     AllocSpace();
@@ -17,7 +17,7 @@ Matrix<T>::Matrix(int rows) : rows_(rows), cols_(1)
     }
 }
 
-template<typename T>
+template<typename T> // матрица вида: "rows" строк и "cols" столбцов
 Matrix<T>::Matrix(int rows, int cols) : rows_(rows), cols_(cols)
 {
     AllocSpace();
@@ -28,8 +28,8 @@ Matrix<T>::Matrix(int rows, int cols) : rows_(rows), cols_(cols)
     }
 }
 
-template<typename T>
-Matrix<T>::Matrix(std::initializer_list<std::initializer_list<T>> l): rows_(l.size), cols_(l.begin->size())
+template<typename T> // матрица принимающая в качестве аргумента лист листов
+Matrix<T>::Matrix(std::initializer_list<std::initializer_list<T>> l): rows_(l.size()), cols_(l.begin()->size())
 {
     AllocSpace();
 
@@ -47,8 +47,8 @@ Matrix<T>::Matrix(std::initializer_list<std::initializer_list<T>> l): rows_(l.si
     }
 }
 
-template<typename T>
-Matrix<T>::Matrix(std::initializer_list<T> l): rows_(1), cols_(l.size)
+template<typename T> // матрица принимающая в качестве аргумента лист и делающая его строкой
+Matrix<T>::Matrix(std::initializer_list<T> l): rows_(1), cols_(l.size())
 {
     AllocSpace();
 
@@ -60,7 +60,7 @@ Matrix<T>::Matrix(std::initializer_list<T> l): rows_(1), cols_(l.size)
     }
 }
 
-template<typename T>
+template<typename T> // матрица принимающая размер и двумерный массив (что-то типо конструктора копирования)
 Matrix<T>::Matrix(T** new_elem, int rows, int cols) : rows_(rows), cols_(cols)
 {
     AllocSpace();
@@ -71,14 +71,14 @@ Matrix<T>::Matrix(T** new_elem, int rows, int cols) : rows_(rows), cols_(cols)
     }
 }
 
-template<typename T>
+template<typename T> // непараметризованный конструктор матрицы
 Matrix<T>::Matrix() : rows_(1), cols_(1)
 {
     AllocSpace();
     elem[0][0] = 0;
 }
 
-template<typename T>
+template<typename T> // деструктор
 Matrix<T>::~Matrix()
 {
     for (int i = 0; i < rows_; ++i)
@@ -86,7 +86,7 @@ Matrix<T>::~Matrix()
     delete[] elem;
 }
 
-template<typename T>
+template<typename T> // конструктор копирования
 Matrix<T>::Matrix(const Matrix<T>& m): rows_(m.rows_), cols_(m.cols_)
 {
     AllocSpace();
@@ -97,7 +97,7 @@ Matrix<T>::Matrix(const Matrix<T>& m): rows_(m.rows_), cols_(m.cols_)
     }
 }
 
-template<typename T>
+template<typename T> // конструктор перемещения
 Matrix<T>::Matrix(Matrix<T>&& m)
 noexcept{
     for (int i = 0; i < rows_; ++i)
@@ -108,7 +108,7 @@ noexcept{
     cols_ = m.cols_;
 }
 
-template<typename T>
+template<typename T> // динамическое выделение памяти
 void Matrix<T>::AllocSpace()
 {
     elem = new T*[rows_];
@@ -116,7 +116,7 @@ void Matrix<T>::AllocSpace()
         elem[i] = new T[cols_];
 }
 
-template<typename T>
+template<typename T> // перезагрузка оператора присваивания
 Matrix<T>& Matrix<T>::operator=(const Matrix<T>& m)
 {
     if (this == &m)
@@ -141,12 +141,13 @@ Matrix<T>& Matrix<T>::operator=(const Matrix<T>& m)
     return *this;
 }
 
-template<typename T>
+template<typename T> // перезагрузка оператора поиска
 T& Matrix<T>::operator()(int x, int y)
 {
     return elem[x][y];
 }
 
+// перезагрузка операторов с обработкой исключений
 template<typename T>
 Matrix<T>& Matrix<T>::operator+=(const Matrix<T>& m)
 {
@@ -188,11 +189,8 @@ Matrix<T>& Matrix<T>::operator*=(const Matrix<T>& m)
         }
     }
 
-    if (rows_ != m.cols_ && cols_ != m.rows_)
-    {
-        if (rows_ != m.rows_ && cols_ != m.cols_)
-            throw std::out_of_range("Incompatible matrixes.");
-    }
+    if (cols_ != m.rows_)
+        throw std::out_of_range("Incompatible matrixes.");
 
     return (*this = temp);
 }
@@ -219,27 +217,26 @@ Matrix<T>& Matrix<T>::operator/=(double num)
     return *this;
 }
 
-template<typename T>
-Matrix<T> Matrix<T>::PowHelper(const Matrix<T>& m, int num)
-{
-    if (num == 0)
-        return IdentityMatrix(m.rows_);
-    else if (num == 1)
-        return m;
-    else if (num % 2 == 0) // для четной степени
-        return PowHelper(m * m, num / 2);
-    else // для нечетной степени
-        return m * PowHelper(m * m, (num - 1) / 2);
-}
-
-template<typename T>
+template<typename T> // возведение в степень
 Matrix<T> Matrix<T>::operator^(int num)
 {
-    Matrix temp(*this);
-    return PowHelper(temp, num);
+    Matrix<T> temp(*this);
+
+    if (num == 1) // для первой степени
+        return temp;
+
+    if (temp.rows_ == temp.cols_)
+    {
+        if (num == 0) // для нулевой степени
+            return IdentityMatrix(temp.rows_);
+        else if (num % 2 == 0) // для четной степени
+            return PowHelper(temp * temp, num / 2);
+        else // для нечетной степени
+            return temp * PowHelper(temp * temp, (num - 1) / 2);
+    }
 }
 
-template<typename T>
+template<typename T> // чтобы менять местами строки
 void Matrix<T>::SwapRows(int row1, int row2)
 {
     T *temp = elem[row1];
@@ -247,7 +244,7 @@ void Matrix<T>::SwapRows(int row1, int row2)
     elem[row2] = temp;
 }
 
-template<typename T>
+template<typename T> // транспонирование матрицы
 Matrix<T> Matrix<T>::Transpose()
 {
     Matrix temp(cols_, rows_);
@@ -260,7 +257,7 @@ Matrix<T> Matrix<T>::Transpose()
 }
 
 
-template<typename T>
+template<typename T> // создание нулевой матрицы
 Matrix<T> Matrix<T>::IdentityMatrix(int size)
 {
     Matrix temp(size, size);
@@ -278,6 +275,7 @@ Matrix<T> Matrix<T>::IdentityMatrix(int size)
 }
 
 
+// перезагрузка операторов
 template<typename T>
 Matrix<T> operator+(const Matrix<T>& m1, const Matrix<T>& m2)
 {
@@ -307,12 +305,6 @@ Matrix<T> operator*(const Matrix<T>& m, double num)
 }
 
 template<typename T>
-Matrix<T> operator*(double num, const Matrix<T>& m)
-{
-    return (m * num);
-}
-
-template<typename T>
 Matrix<T> operator/(const Matrix<T>& m, double num)
 {
     Matrix<T> temp(m);
@@ -320,7 +312,7 @@ Matrix<T> operator/(const Matrix<T>& m, double num)
 }
 
 
-
+// перезагрузка операторов ввода и вывода
 template<typename T>
 istream& operator>>(istream& in, Matrix<T>& m)
 {
@@ -344,12 +336,24 @@ ostream& operator<<(ostream& out, const Matrix<T>& m)
     return out;
 }
 
+
+// тесты
 int main()
 {
+    Matrix<int> m1(4);
+    Matrix<int> m2(4, 6);
+    Matrix<int> m5 = { {1, 2, 3}, {4, 5, 6} };
+    Matrix<int> m6 = { {1, 2, 3, 4, 5, 6} };
+    Matrix<int> m7={1, 2, 3, 4, 5, 6};
+    std::initializer_list<std::initializer_list<int>> list1 = { {1}, {2}, {3}, {4}, {5}, {6} };
+    Matrix<int> m8(list1);
+    std::cout << m1 << m2 << m5 << m6 << m7 << m8 << std::endl;
+
     Matrix<int> a(3,3);
     Matrix<int> b(4,4);
     a(0, 2) = 13;
     Matrix<int> c = a + b;
     std::cout << c;
+
     return 0;
 }

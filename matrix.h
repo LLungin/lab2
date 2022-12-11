@@ -6,10 +6,9 @@
 #define LAB2_MATRIX_H
 
 #include <iostream>
-#include <string>
 
 
-
+// шаблон класса
 template<typename T>
 class Matrix
 {
@@ -33,10 +32,9 @@ public:
     Matrix<T>& operator*=(const Matrix<T>&);
     Matrix<T>& operator*=(double);
     Matrix<T>& operator/=(double);
-    Matrix<T>  operator^(int);
-    Matrix<T> PowHelper(const Matrix &m, int num);
+    Matrix<T> operator^(int);
 
-
+    // У меня какая-то проблема с линкером поэтому потоки ввода и вывода я прописываю в шаблоне
     friend std::istream& operator>>(std::istream& in, Matrix<T>& m)
     {
         for (int i = 0; i < m.rows_; ++i)
@@ -63,6 +61,7 @@ public:
 
     static Matrix<T> IdentityMatrix(int size);
 
+// Поля класса
 private:
     int rows_, cols_;
     T **elem;
@@ -81,9 +80,6 @@ Matrix<T> operator*(const Matrix<T>&, const Matrix<T>&);
 
 template<typename T>
 Matrix<T> operator*(const Matrix<T>&, double);
-
-template<typename T>
-Matrix<T> operator*(double, const Matrix<T>&);
 
 template<typename T>
 Matrix<T> operator/(const Matrix<T>&, double);
