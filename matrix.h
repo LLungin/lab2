@@ -15,24 +15,35 @@ class Matrix
 public:
     Matrix(int);
     Matrix(int, int);
-    Matrix(std::initializer_list<std::initializer_list<T>>);
-    Matrix(std::initializer_list<T> l);
-    Matrix(T**, int, int);
+    template<typename S>
+    Matrix(std::initializer_list<std::initializer_list<S>>);
+    template<typename S>
+    Matrix(std::initializer_list<S> l);
+    template<typename S>
+    Matrix(S**, int, int);
     Matrix();
     ~Matrix();
     Matrix(const Matrix<T>&);
+    template<typename S>
+    Matrix(const Matrix<S>&);
     Matrix(Matrix<T>&&) noexcept;
 
     Matrix<T>& operator=(const Matrix<T>&);
+    template<typename S>
+    Matrix<T>& operator=(const Matrix<S>&);
 
     T& operator()(int x, int y);
+    T at(int x, int y) const;
 
-    Matrix<T>& operator+=(const Matrix<T>&);
-    Matrix<T>& operator-=(const Matrix<T>&);
-    Matrix<T>& operator*=(const Matrix<T>&);
+    template<typename S>
+    Matrix<T>& operator+=(const Matrix<S>&);
+    template<typename S>
+    Matrix<T>& operator-=(const Matrix<S>&);
+    template<typename S>
+    Matrix<T>& operator*=(const Matrix<S>&);
     Matrix<T>& operator*=(double);
     Matrix<T>& operator/=(double);
-    Matrix<T> operator^(int);
+    Matrix<T> Pow(int);
 
     // У меня какая-то проблема с линкером поэтому потоки ввода и вывода я прописываю в шаблоне
     friend std::istream& operator>>(std::istream& in, Matrix<T>& m)
@@ -61,6 +72,18 @@ public:
 
     static Matrix<T> IdentityMatrix(int size);
 
+    // методы получения данных из прайвата для переменных типа Matrix<S> у которых нет доступа к прайвату
+    T get_rows() const
+    {
+        return rows_;
+    }
+
+    T get_cols() const
+    {
+        return cols_;
+    }
+
+
 // Поля класса
 private:
     int rows_, cols_;
@@ -69,13 +92,13 @@ private:
     void AllocSpace();
 };
 
-template<typename T>
-Matrix<T> operator+(const Matrix<T>&, const Matrix<T>&);
+template<typename T, typename S>
+Matrix<T> operator+(const Matrix<T>&, const Matrix<S>&);
 
-template<typename T>
+template<typename T, typename S>
 Matrix<T> operator-(const Matrix<T>&, const Matrix<T>&);
 
-template<typename T>
+template<typename T, typename S>
 Matrix<T> operator*(const Matrix<T>&, const Matrix<T>&);
 
 template<typename T>

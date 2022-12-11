@@ -28,8 +28,8 @@ Matrix<T>::Matrix(int rows, int cols) : rows_(rows), cols_(cols)
     }
 }
 
-template<typename T> // матрица принимающая в качестве аргумента лист листов
-Matrix<T>::Matrix(std::initializer_list<std::initializer_list<T>> l): rows_(l.size()), cols_(l.begin()->size())
+template<typename T> template<typename S>// матрица принимающая в качестве аргумента лист листов
+Matrix<T>::Matrix(std::initializer_list<std::initializer_list<S>> l): rows_(l.size()), cols_(l.begin()->size())
 {
     AllocSpace();
 
@@ -47,8 +47,8 @@ Matrix<T>::Matrix(std::initializer_list<std::initializer_list<T>> l): rows_(l.si
     }
 }
 
-template<typename T> // матрица принимающая в качестве аргумента лист и делающая его строкой
-Matrix<T>::Matrix(std::initializer_list<T> l): rows_(1), cols_(l.size())
+template<typename T> template<typename S>// матрица принимающая в качестве аргумента лист и делающая его строкой
+Matrix<T>::Matrix(std::initializer_list<S> l): rows_(1), cols_(l.size())
 {
     AllocSpace();
 
@@ -60,8 +60,8 @@ Matrix<T>::Matrix(std::initializer_list<T> l): rows_(1), cols_(l.size())
     }
 }
 
-template<typename T> // матрица принимающая размер и двумерный массив (что-то типо конструктора копирования)
-Matrix<T>::Matrix(T** new_elem, int rows, int cols) : rows_(rows), cols_(cols)
+template<typename T> template<typename S>// матрица принимающая размер и двумерный массив (что-то типо конструктора копирования)
+Matrix<T>::Matrix(S** new_elem, int rows, int cols) : rows_(rows), cols_(cols)
 {
     AllocSpace();
     for (int i = 0; i < rows_; ++i)
@@ -86,14 +86,25 @@ Matrix<T>::~Matrix()
     delete[] elem;
 }
 
-template<typename T> // конструктор копирования
-Matrix<T>::Matrix(const Matrix<T>& m): rows_(m.rows_), cols_(m.cols_)
+template<typename T> // конструктор копирования сугубо для T
+Matrix<T>::Matrix(const Matrix<T>& m): rows_(m.get_rows()), cols_(m.get_cols())
 {
     AllocSpace();
     for (int i = 0; i < rows_; ++i)
     {
         for (int j = 0; j < cols_; ++j)
-            elem[i][j] = m.elem[i][j];
+            elem[i][j] = m.at(i, j);
+    }
+}
+
+template<typename T> template<typename S>// конструктор копирования для разных классов
+Matrix<T>::Matrix(const Matrix<S>& m): rows_(m.get_rows()), cols_(m.get_cols())
+{
+    AllocSpace();
+    for (int i = 0; i < rows_; ++i)
+    {
+        for (int j = 0; j < cols_; ++j)
+            elem[i][j] = static_cast<T>(m.at(i, j));
     }
 }
 
@@ -116,7 +127,7 @@ void Matrix<T>::AllocSpace()
         elem[i] = new T[cols_];
 }
 
-template<typename T> // перезагрузка оператора присваивания
+template<typename T> // перезагрузка оператора присваивания сугубо для T
 Matrix<T>& Matrix<T>::operator=(const Matrix<T>& m)
 {
     if (this == &m)
@@ -136,7 +147,32 @@ Matrix<T>& Matrix<T>::operator=(const Matrix<T>& m)
     for (int i = 0; i < rows_; ++i)
     {
         for (int j = 0; j < cols_; ++j)
-            elem[i][j] = m.elem[i][j];
+            elem[i][j] = m.at(i, j);
+    }
+    return *this;
+}
+
+template<typename T> template<typename S> // перезагрузка оператора присваивания для разных класов
+Matrix<T>& Matrix<T>::operator=(const Matrix<S>& m)
+{
+    if (this == &m)
+        return *this;
+
+    if (rows_ != m.rows_ || cols_ != m.cols_)
+    {
+        for (int i = 0; i < rows_; ++i)
+            delete[] elem[i];
+        delete[] elem;
+
+        rows_ = m.rows_;
+        cols_ = m.cols_;
+        AllocSpace();
+    }
+
+    for (int i = 0; i < rows_; ++i)
+    {
+        for (int j = 0; j < cols_; ++j)
+            elem[i][j] = static_cast<T>(m.at(i, j));
     }
     return *this;
 }
@@ -147,50 +183,58 @@ T& Matrix<T>::operator()(int x, int y)
     return elem[x][y];
 }
 
+template<class T> // я специально написал константный метод поиска чтобы не было проблемы с поиском по константной переменной
+T Matrix<T>::at(int x, int y) const
+{
+    if(x < 0 || y < 0 || x >= rows_ || y >= cols_ ) // ошибка на случай того, что выбранному индексу не соответствует элемент
+        throw std::out_of_range("Chosen index does not belong to the vector.");
+    return elem[x][y];
+}
+
 // перезагрузка операторов с обработкой исключений
-template<typename T>
-Matrix<T>& Matrix<T>::operator+=(const Matrix<T>& m)
+template<typename T> template<typename S>
+Matrix<T>& Matrix<T>::operator+=(const Matrix<S>& m)
 {
-    if (rows_ != m.rows_ || cols_ != m.cols_)
+    if (rows_ != m.get_rows() || cols_ != m.get_cols())
         throw std::out_of_range("Incompatible matrixes.");
 
     for (int i = 0; i < rows_; ++i)
     {
         for (int j = 0; j < cols_; ++j)
-            elem[i][j] += m.elem[i][j];
+            elem[i][j] += static_cast<T>(m.at(i, j));
     }
     return *this;
 }
 
-template<typename T>
-Matrix<T>& Matrix<T>::operator-=(const Matrix<T>& m)
+template<typename T> template<typename S>
+Matrix<T>& Matrix<T>::operator-=(const Matrix<S>& m)
 {
-    if (rows_ != m.rows_ || cols_ != m.cols_)
+    if (rows_ != m.get_rows() || cols_ != m.get_cols())
         throw std::out_of_range("Incompatible matrixes.");
 
     for (int i = 0; i < rows_; ++i)
     {
         for (int j = 0; j < cols_; ++j)
-            elem[i][j] -= m.elem[i][j];
+            elem[i][j] -= static_cast<T>(m.at(i, j));
     }
     return *this;
 }
 
-template<typename T>
-Matrix<T>& Matrix<T>::operator*=(const Matrix<T>& m)
+template<typename T> template<typename S>
+Matrix<T>& Matrix<T>::operator*=(const Matrix<S>& m)
 {
-    Matrix temp(rows_, m.cols_);
+    if (cols_ != m.get_rows())
+        throw std::out_of_range("Incompatible matrixes.");
+
+    Matrix<T> temp(m.get_rows(), m.get_cols());
     for (int i = 0; i < temp.rows_; ++i)
     {
         for (int j = 0; j < temp.cols_; ++j)
         {
             for (int k = 0; k < cols_; ++k)
-                temp.elem[i][j] += (elem[i][k] * m.elem[k][j]);
+                temp.elem[i][j] += (elem[i][k] * static_cast<T>(m.at(k, j)));
         }
     }
-
-    if (cols_ != m.rows_)
-        throw std::out_of_range("Incompatible matrixes.");
 
     return (*this = temp);
 }
@@ -218,8 +262,11 @@ Matrix<T>& Matrix<T>::operator/=(double num)
 }
 
 template<typename T> // возведение в степень
-Matrix<T> Matrix<T>::operator^(int num)
+Matrix<T> Matrix<T>::Pow(int num)
 {
+    if (num < 0)
+        throw std::out_of_range("The degree is below zero.");
+
     Matrix<T> temp(*this);
 
     if (num == 1) // для первой степени
@@ -229,10 +276,18 @@ Matrix<T> Matrix<T>::operator^(int num)
     {
         if (num == 0) // для нулевой степени
             return IdentityMatrix(temp.rows_);
+
         else if (num % 2 == 0) // для четной степени
-            return PowHelper(temp * temp, num / 2);
+        {
+            Matrix<T> temp1 = temp * temp;
+            return temp1.Pow(num / 2);
+        }
+
         else // для нечетной степени
-            return temp * PowHelper(temp * temp, (num - 1) / 2);
+        {
+            Matrix<T> temp2 = temp * temp;
+            return temp * temp2.Pow((num - 1)/2);
+        }
     }
 }
 
@@ -257,10 +312,10 @@ Matrix<T> Matrix<T>::Transpose()
 }
 
 
-template<typename T> // создание нулевой матрицы
+template<typename T> // создание единичной матрицы
 Matrix<T> Matrix<T>::IdentityMatrix(int size)
 {
-    Matrix temp(size, size);
+    Matrix<T> temp(size, size);
     for (int i = 0; i < temp.rows_; ++i)
     {
         for (int j = 0; j < temp.cols_; ++j)
@@ -275,23 +330,23 @@ Matrix<T> Matrix<T>::IdentityMatrix(int size)
 }
 
 
-// перезагрузка операторов
-template<typename T>
-Matrix<T> operator+(const Matrix<T>& m1, const Matrix<T>& m2)
+// перезагрузка операторов для нескольких классов
+template<typename T, typename S>
+Matrix<T> operator+(const Matrix<T>& m1, const Matrix<S>& m2)
 {
     Matrix<T> temp(m1);
     return (temp += m2);
 }
 
-template<typename T>
-Matrix<T> operator-(const Matrix<T>& m1, const Matrix<T>& m2)
+template<typename T, typename S>
+Matrix<T> operator-(const Matrix<T>& m1, const Matrix<S>& m2)
 {
     Matrix<T> temp(m1);
     return (temp -= m2);
 }
 
-template<typename T>
-Matrix<T> operator*(const Matrix<T>& m1, const Matrix<T>& m2)
+template<typename T, typename S>
+Matrix<T> operator*(const Matrix<T>& m1, const Matrix<S>& m2)
 {
     Matrix<T> temp(m1);
     return (temp *= m2);
@@ -340,6 +395,7 @@ ostream& operator<<(ostream& out, const Matrix<T>& m)
 // тесты
 int main()
 {
+    // ваш пробный набор
     Matrix<int> m1(4);
     Matrix<int> m2(4, 6);
     Matrix<int> m5 = { {1, 2, 3}, {4, 5, 6} };
@@ -347,13 +403,34 @@ int main()
     Matrix<int> m7={1, 2, 3, 4, 5, 6};
     std::initializer_list<std::initializer_list<int>> list1 = { {1}, {2}, {3}, {4}, {5}, {6} };
     Matrix<int> m8(list1);
-    std::cout << m1 << m2 << m5 << m6 << m7 << m8 << std::endl;
+    std::cout << m1 << m2 << m5 << m6 << m7 << m8 << endl;
 
+    // для разных классов + разные опервции и операторы
+    Matrix<int> d(3, 3);
+    std::cout << d << endl;
+
+    Matrix<float> e = d;
+    std::cout << e << endl;
+
+    Matrix<double> g{1.3};
+    Matrix<int> h{7};
+    g += h;
+    std::cout << g << endl;
+
+    // умножение для одинаковых классов
+    Matrix<float> mat1 = {{1, 2}, {3, 4}};
+    Matrix<float> mat2 = {{1.3, 2.3}, {3.3, 4.3}};
+    std::cout << mat1*mat2 << endl;
+
+    // присваиваиание по индексу
     Matrix<int> a(3,3);
     Matrix<int> b(4,4);
     a(0, 2) = 13;
+    std::cout << a << endl;
+
+    // вызов исключения
     Matrix<int> c = a + b;
-    std::cout << c;
+    std::cout << c << endl;
 
     return 0;
 }
