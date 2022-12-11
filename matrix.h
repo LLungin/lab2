@@ -9,21 +9,19 @@
 #include <string>
 
 template<typename T>
-class Matrix {
+class Matrix
+{
 public:
     Matrix(int, int);
     Matrix(T**, int, int);
     Matrix();
     ~Matrix();
     Matrix(const Matrix<T>&);
-    Matrix(Matrix<T>&&);
+    Matrix(Matrix<T>&&) noexcept;
 
     Matrix<T>& operator=(const Matrix<T>&);
 
-    double& operator()(int x, int y)
-    {
-        return elem[x][y];
-    }
+    double& operator()(int x, int y);
 
     Matrix<T>& operator+=(const Matrix<T>&);
     Matrix<T>& operator-=(const Matrix<T>&);
@@ -31,6 +29,7 @@ public:
     Matrix<T>& operator*=(double);
     Matrix<T>& operator/=(double);
     Matrix<T>  operator^(int);
+    Matrix<T> PowHelper(const Matrix &m, int num);
 
     friend std::ostream& operator<<(std::ostream&, const Matrix<T>&);
     friend std::istream& operator>>(std::istream&, Matrix<T>&);
@@ -45,7 +44,7 @@ private:
     T **elem;
 
     void AllocSpace();
-    Matrix<T> PowHelper(const Matrix &m, int num);
+
 };
 
 template<typename T>
