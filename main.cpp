@@ -5,6 +5,18 @@ using std::istream;
 using std::endl;
 
 
+
+template<typename T>
+Matrix<T>::Matrix(int rows) : rows_(rows), cols_(1)
+{
+    AllocSpace();
+    for (int i = 0; i < rows_; ++i)
+    {
+        for (int j = 0; j < cols_; ++j)
+            elem[i][j] = 0;
+    }
+}
+
 template<typename T>
 Matrix<T>::Matrix(int rows, int cols) : rows_(rows), cols_(cols)
 {
@@ -13,6 +25,38 @@ Matrix<T>::Matrix(int rows, int cols) : rows_(rows), cols_(cols)
     {
         for (int j = 0; j < cols_; ++j)
             elem[i][j] = 0;
+    }
+}
+
+template<typename T>
+Matrix<T>::Matrix(std::initializer_list<std::initializer_list<T>> l): rows_(l.size), cols_(l.begin->size())
+{
+    AllocSpace();
+
+    int i = 0;
+    int j = 0;
+    for (auto row :l)
+    {
+        j = 0;
+        for (auto element : row)
+        {
+            elem[i][j] = element;
+            j++;
+        }
+        i++;
+    }
+}
+
+template<typename T>
+Matrix<T>::Matrix(std::initializer_list<T> l): rows_(1), cols_(l.size)
+{
+    AllocSpace();
+
+    int i = 0;
+    for (auto element :l)
+    {
+        elem[0][i] = element;
+        i++;
     }
 }
 
@@ -98,8 +142,17 @@ Matrix<T>& Matrix<T>::operator=(const Matrix<T>& m)
 }
 
 template<typename T>
+T& Matrix<T>::operator()(int x, int y)
+{
+    return elem[x][y];
+}
+
+template<typename T>
 Matrix<T>& Matrix<T>::operator+=(const Matrix<T>& m)
 {
+    if (rows_ != m.rows_ || cols_ != m.cols_)
+        throw std::out_of_range("Incompatible matrixes.");
+
     for (int i = 0; i < rows_; ++i)
     {
         for (int j = 0; j < cols_; ++j)
@@ -111,6 +164,9 @@ Matrix<T>& Matrix<T>::operator+=(const Matrix<T>& m)
 template<typename T>
 Matrix<T>& Matrix<T>::operator-=(const Matrix<T>& m)
 {
+    if (rows_ != m.rows_ || cols_ != m.cols_)
+        throw std::out_of_range("Incompatible matrixes.");
+
     for (int i = 0; i < rows_; ++i)
     {
         for (int j = 0; j < cols_; ++j)
@@ -132,10 +188,8 @@ Matrix<T>& Matrix<T>::operator*=(const Matrix<T>& m)
         }
     }
 
-    if (rows_ != m.rows_ || cols_ != m.cols_)
-    {
+    if (rows_ != m.rows_ || cols_ != m.cols_) // !!!!!
         throw std::out_of_range("Incompatible matrixes.");
-    }
 
     return (*this = temp);
 }
@@ -185,10 +239,11 @@ Matrix<T> Matrix<T>::operator^(int num)
 template<typename T>
 void Matrix<T>::SwapRows(int row1, int row2)
 {
-    double *temp = elem[row1];
+    T *temp = elem[row1];
     elem[row1] = elem[row2];
     elem[row2] = temp;
 }
+
 template<typename T>
 Matrix<T> Matrix<T>::Transpose()
 {
@@ -279,10 +334,19 @@ ostream& operator<<(ostream& out, const Matrix<T>& m)
 {
     for (int i = 0; i < m.rows_; ++i)
     {
-        out << m.elem[i][0];
-        for (int j = 1; j < m.cols_; ++j)
-            out << " " << m.elem[i][j];
+        for (int j = 0; j < m.cols_; ++j)
+            out << m.elem[i][j] << " ";
         out << endl;
     }
     return out;
+}
+
+int main()
+{
+    Matrix<int> a(3,3);
+    Matrix<int> b(4,4);
+    a(0, 2) = 13;
+    Matrix<int> c = a + b;
+    std::cout << c;
+    return 0;
 }

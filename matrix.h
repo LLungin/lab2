@@ -8,11 +8,16 @@
 #include <iostream>
 #include <string>
 
+
+
 template<typename T>
 class Matrix
 {
 public:
+    Matrix(int);
     Matrix(int, int);
+    Matrix(std::initializer_list<std::initializer_list<T>>);
+    Matrix(std::initializer_list<T> l);
     Matrix(T**, int, int);
     Matrix();
     ~Matrix();
@@ -21,7 +26,7 @@ public:
 
     Matrix<T>& operator=(const Matrix<T>&);
 
-    double& operator()(int x, int y);
+    T& operator()(int x, int y);
 
     Matrix<T>& operator+=(const Matrix<T>&);
     Matrix<T>& operator-=(const Matrix<T>&);
@@ -31,20 +36,38 @@ public:
     Matrix<T>  operator^(int);
     Matrix<T> PowHelper(const Matrix &m, int num);
 
-    friend std::ostream& operator<<(std::ostream&, const Matrix<T>&);
-    friend std::istream& operator>>(std::istream&, Matrix<T>&);
+
+    friend std::istream& operator>>(std::istream& in, Matrix<T>& m)
+    {
+        for (int i = 0; i < m.rows_; ++i)
+        {
+            for (int j = 0; j < m.cols_; ++j)
+                in >> m.elem[i][j];
+        }
+        return in;
+    }
+
+    friend std::ostream& operator<<(std::ostream& out, const Matrix<T>& m)
+    {
+        for (int i = 0; i < m.rows_; ++i)
+        {
+            for (int j = 0; j < m.cols_; ++j)
+                out << m.elem[i][j] << " ";
+            out << std::endl;
+        }
+        return out;
+    }
 
     void SwapRows(int, int);
     Matrix<T> Transpose();
 
-    static Matrix IdentityMatrix(int size);
+    static Matrix<T> IdentityMatrix(int size);
 
 private:
     int rows_, cols_;
     T **elem;
 
     void AllocSpace();
-
 };
 
 template<typename T>
