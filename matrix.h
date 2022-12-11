@@ -8,7 +8,7 @@
 #include <iostream>
 
 
-// шаблон класса
+// Шаблон класса
 template<typename T>
 class Matrix
 {
@@ -72,7 +72,7 @@ public:
 
     static Matrix<T> IdentityMatrix(int size);
 
-    // методы получения данных из прайвата для переменных типа Matrix<S> у которых нет доступа к прайвату
+    // методы получения данных из прайвата для переменных типа Matrix<S>, у которых нет доступа к прайвату
     T get_rows() const
     {
         return rows_;
