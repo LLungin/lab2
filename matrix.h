@@ -16,6 +16,7 @@ public:
     Matrix();
     ~Matrix();
     Matrix(const Matrix<T>&);
+    Matrix(Matrix<T>&&);
 
     Matrix<T>& operator=(const Matrix<T>&);
 
@@ -41,7 +42,7 @@ public:
 
 private:
     int rows_, cols_;
-    double **elem;
+    T **elem;
 
     void AllocSpace();
     Matrix<T> PowHelper(const Matrix &m, int num);
