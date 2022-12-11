@@ -188,8 +188,11 @@ Matrix<T>& Matrix<T>::operator*=(const Matrix<T>& m)
         }
     }
 
-    if (rows_ != m.rows_ || cols_ != m.cols_) // !!!!!
-        throw std::out_of_range("Incompatible matrixes.");
+    if (rows_ != m.cols_ && cols_ != m.rows_)
+    {
+        if (rows_ != m.rows_ && cols_ != m.cols_)
+            throw std::out_of_range("Incompatible matrixes.");
+    }
 
     return (*this = temp);
 }
