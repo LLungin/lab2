@@ -37,7 +37,6 @@ public:
     Matrix Transpose();
 
     static Matrix IdentityMatrix(int size);
-    static Matrix solve(Matrix, Matrix);
 
 private:
     int rows_, cols_;
